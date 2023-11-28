@@ -12,11 +12,29 @@ void ALU(unsigned A, unsigned B, char ALUControl, unsigned *ALUresult, char *Zer
     case 1: // SUB
         *ALUresult = A - B;
         break;
-    // Add cases for other operations as needed
+    case 2: // Set on less than (SLT)
+        *ALUresult = (int)A < (int)B ? 1 : 0;
+        break;
+    case 3: // Set on less than unsigned
+        *ALUresult = A < B ? 1 : 0;
+        break;
+    case 4: // AND
+        *ALUresult = A & B;
+        break;
+    case 5: // XOR
+        *ALUresult = A ^ B;
+        break;
+    case 6: // Shift B left by 16 bits
+        *ALUresult = B << 16;
+        break;
+    case 7: // NOT A
+        *ALUresult = ~A;
+        break;
     default:
         // Handle undefined ALU control
         break;
     }
+
     *Zero = (*ALUresult == 0) ? 1 : 0;
 }
 
@@ -25,6 +43,10 @@ void ALU(unsigned A, unsigned B, char ALUControl, unsigned *ALUresult, char *Zer
 int instruction_fetch(unsigned PC, unsigned *Mem, unsigned *instruction)
 {
     *instruction = Mem[PC >> 2];
+    if (*instruction == 0)
+    {
+        return 1;
+    }
     return 0;
 }
 
@@ -179,41 +201,43 @@ void sign_extend(unsigned offset, unsigned *extended_value)
 /* ALU operations */
 /* 10 Points */
 int ALU_operations(unsigned data1, unsigned data2, unsigned extended_value, unsigned funct, char ALUOp, char ALUSrc, unsigned *ALUresult, char *Zero)
-{ // R-Type
-    // Checks if the ALUSrc is zero, if it is zero then the operation will be an R-Type
+{
+    // Determine the actual ALU operation code
+    char actualALUOp;
+
+    // R-Type
     if (ALUSrc == 0)
     {
         switch (funct)
         {
         case 0x21: // Addition unsigned
-            ALUOp = 0;
+            actualALUOp = 0;
             break;
         case 0x23: // Subtraction unsigned
-            ALUOp = 1;
+            actualALUOp = 1;
             break;
         case 0x24: // Bitwise and
-            ALUOp = 4;
+            actualALUOp = 4;
             break;
         case 0x2a: // Set on less than
-            ALUOp = 2;
+            actualALUOp = 2;
             break;
         case 0x2b: // Set on less than unsigned
-            ALUOp = 3;
+            actualALUOp = 3;
             break;
         default: // Unknown
             return 1;
         }
-
-        ALU(data1, data2, ALUOp, ALUresult, Zero);
     }
-
     // I-Type
-    // Checks if the ALUSrc is one, if it is one then the operation will be an immediate
     else if (ALUSrc == 1)
     {
-        // the sign extended value is passed into ALU instead of data2
-        ALU(data1, extended_value, ALUOp, ALUresult, Zero);
+        // Use the provided ALUOp for immediate operations
+        actualALUOp = ALUOp;
     }
+
+    // Call the ALU function with the determined operation
+    ALU(data1, (ALUSrc == 0) ? data2 : extended_value, actualALUOp, ALUresult, Zero);
 
     return 0;
 }
@@ -276,7 +300,7 @@ void PC_update(unsigned jsec, unsigned extended_value, char Branch, char Jump, c
         *PC = (jsec << 2) | (*PC | 0xf0000000); // dont do &
     }
     /*If branch is 1, the PC will be equal to the sign extended value shifted left two bits  */
-    else if (Branch == 1 && Zero)
+    else if (Branch == 1 && Zero == 0)
     {
         *PC += (extended_value << 2);
     }
