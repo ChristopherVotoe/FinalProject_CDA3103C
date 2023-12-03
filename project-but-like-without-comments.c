@@ -3,6 +3,7 @@
 /* 10 Points */
 void ALU(unsigned A, unsigned B, char ALUControl, unsigned *ALUresult, char *Zero)
 {
+    // Takes in all cases of ALU and sorts them accordingly
     switch (ALUControl)
     {
     case 0:
@@ -40,6 +41,7 @@ void ALU(unsigned A, unsigned B, char ALUControl, unsigned *ALUresult, char *Zer
 /* 10 Points */
 int instruction_fetch(unsigned PC, unsigned *Mem, unsigned *instruction)
 {
+    // Retries instructions and stores in a location. Then returns depending on case
     *instruction = Mem[PC >> 2];
     if (*instruction == 0)
     {
@@ -52,6 +54,7 @@ int instruction_fetch(unsigned PC, unsigned *Mem, unsigned *instruction)
 /* 10 Points */
 void instruction_partition(unsigned instruction, unsigned *op, unsigned *r1, unsigned *r2, unsigned *r3, unsigned *funct, unsigned *offset, unsigned *jsec)
 {
+    // The Function takes instructions and stores the different values in their own memory locations//
     *op = (instruction >> 26) & 0x3F;
     *r1 = (instruction >> 21) & 0x1F;
     *r2 = (instruction >> 16) & 0x1F;
@@ -65,6 +68,7 @@ void instruction_partition(unsigned instruction, unsigned *op, unsigned *r1, uns
 /* 15 Points */
 int instruction_decode(unsigned op, struct_controls *controls)
 {
+    // Decode the opcode instructions and send where each component of the processor execute
     int haltFlag = 0;
 
     switch (op)
@@ -167,6 +171,7 @@ int instruction_decode(unsigned op, struct_controls *controls)
 /* 5 Points */
 void read_register(unsigned r1, unsigned r2, unsigned *Reg, unsigned *data1, unsigned *data2)
 {
+    // Stores the two registers in the data files
     *data1 = Reg[r1];
     *data2 = Reg[r2];
 }
@@ -175,6 +180,7 @@ void read_register(unsigned r1, unsigned r2, unsigned *Reg, unsigned *data1, uns
 /* 10 Points */
 void sign_extend(unsigned offset, unsigned *extended_value)
 {
+    // Extends the offset 16 bit to 32 bit signed int.
     *extended_value = (offset & 0x8000) ? (offset | 0xFFFF0000) : offset;
 }
 
@@ -182,6 +188,7 @@ void sign_extend(unsigned offset, unsigned *extended_value)
 /* 10 Points */
 int ALU_operations(unsigned data1, unsigned data2, unsigned extended_value, unsigned funct, char ALUOp, char ALUSrc, unsigned *ALUresult, char *Zero)
 {
+    // Perofrms operations using the ALU
     char actualALUOp;
 
     if (ALUSrc == 0)
@@ -221,6 +228,7 @@ int ALU_operations(unsigned data1, unsigned data2, unsigned extended_value, unsi
 /* 10 Points */
 int rw_memory(unsigned ALUresult, unsigned data2, char MemWrite, char MemRead, unsigned *memdata, unsigned *Mem)
 {
+    //
     if ((MemWrite == 1 || MemRead == 1) && ALUresult % 4 != 0)
     {
         return 1;
@@ -241,6 +249,7 @@ int rw_memory(unsigned ALUresult, unsigned data2, char MemWrite, char MemRead, u
 /* 10 Points */
 void write_register(unsigned r2, unsigned r3, unsigned memdata, unsigned ALUresult, char RegWrite, char RegDst, char MemtoReg, unsigned *Reg)
 {
+    //
     if (RegWrite == 1)
     {
         if (MemtoReg == 1)
